@@ -1,0 +1,175 @@
+---
+title: "Hecttor"
+sidebarTitle: "Hecttor"
+description: "Learn how to integrate Hecttor's audio denoising into your Pipecat application"
+---
+
+## Overview
+
+Hecttor's SDK provides real-time audio denoising for Pipecat applications using deep learning. It removes background noise and enhances speech clarity with two specialized modes:
+
+- **ASR Mode** — Optimized for speech recognition pipelines. Preserves speech characteristics important for transcription accuracy, leading to fewer errors and better STT results.
+- **Human Mode** — Optimized for human listeners. Includes optional voice boost (multi-band compressor) that increases speech loudness and clarity.
+
+<CardGroup cols={2}>
+  <Card
+    title="HecttorFilter Reference"
+    icon="code"
+    href="/server/utilities/audio/hecttor-filter"
+  >
+    API reference for audio denoising
+  </Card>
+  <Card
+    title="Hecttor Example"
+    icon="play"
+    href="https://github.com/pipecat-ai/pipecat/blob/main/examples/foundational/07zm-interruptible-hecttor.py"
+  >
+    Complete example with Hecttor denoising
+  </Card>
+  <Card
+    title="Hecttor"
+    icon="globe"
+    href="https://hecttor.ai"
+  >
+    Learn more about Hecttor
+  </Card>
+</CardGroup>
+
+## Prerequisites
+
+To use Hecttor with Pipecat, you need:
+
+1. A Hecttor API key
+2. The `hecttor_sdk` Python wheel for your platform
+
+<Tip>
+  Get your API key and download the SDK from the [Hecttor admin panel](https://admin.hecttor.ai).
+</Tip>
+
+## Setup
+
+### Download the Python SDK
+
+1. Log in to the [Hecttor admin panel](https://admin.hecttor.ai)
+2. Download the `hecttor_sdk` wheel file for your platform and Python version
+
+### Install the SDK
+
+Install the wheel file you downloaded:
+
+```bash
+pip install hecttor_sdk-<version>-<python>-<platform>.whl
+```
+
+For example, on macOS ARM64 with Python 3.10:
+
+```bash
+pip install hecttor_sdk-2.1.0-cp310-cp310-macosx_15_0_arm64.whl
+```
+
+Then install the pipecat Hecttor extra:
+
+```bash
+pip install "pipecat-ai[hecttor]"
+```
+
+### Set up environment variables
+
+Add your Hecttor API key to your `.env` file:
+
+```bash
+HECTTOR_API_KEY=your_api_key_here
+```
+
+## Test the integration
+
+You're ready to test! Try running the [Hecttor foundational example](https://github.com/pipecat-ai/pipecat/blob/main/examples/foundational/07zm-interruptible-hecttor.py), which demonstrates audio denoising with Deepgram STT, OpenAI LLM, and Cartesia TTS.
+
+<Tip>
+  Learn how to [run foundational
+  examples](https://github.com/pipecat-ai/pipecat/blob/main/examples/README.md)
+  in Pipecat.
+</Tip>
+
+## Audio Denoising
+
+`HecttorFilter` removes background noise from the user's audio in real-time. Add it to any transport via the `audio_in_filter` parameter.
+
+### ASR Mode (for STT pipelines)
+
+Use ASR mode when the audio will be processed by a speech-to-text service. This mode preserves speech features that are important for accurate transcription.
+
+```python
+import os
+from pipecat.audio.filters.hecttor_filter import HecttorFilter
+from pipecat.transports.base_transport import TransportParams
+
+hecttor_filter = HecttorFilter(
+    api_key=os.getenv("HECTTOR_API_KEY"),
+    mode="asr",
+)
+
+transport = SmallWebRTCTransport(
+    webrtc_connection=webrtc_connection,
+    params=TransportParams(
+        audio_in_enabled=True,
+        audio_in_filter=hecttor_filter,
+        audio_out_enabled=True,
+    ),
+)
+```
+
+### Human Mode (with voice boost)
+
+Use Human mode when the audio will be heard by human listeners (e.g., recordings or call forwarding). Enable voice boost for louder, clearer speech.
+
+```python
+import os
+from pipecat.audio.filters.hecttor_filter import HecttorFilter
+from pipecat.transports.daily.transport import DailyParams, DailyTransport
+
+hecttor_filter = HecttorFilter(
+    api_key=os.getenv("HECTTOR_API_KEY"),
+    mode="human",
+    enable_voice_boost=True,
+)
+
+transport = DailyTransport(
+    room_url,
+    token,
+    "Respond bot",
+    DailyParams(
+        audio_in_enabled=True,
+        audio_in_filter=hecttor_filter,
+        audio_out_enabled=True,
+    ),
+)
+```
+
+### Fine-tuning Enhancement
+
+Use the `enhancer_weight` parameter to blend between original and enhanced audio:
+
+```python
+hecttor_filter = HecttorFilter(
+    api_key=os.getenv("HECTTOR_API_KEY"),
+    mode="asr",
+    enhancer_weight=0.8,  # 80% enhanced, 20% original
+)
+```
+
+### Runtime Toggle
+
+Disable and re-enable denoising at runtime using `FilterEnableFrame`:
+
+```python
+from pipecat.frames.frames import FilterEnableFrame
+
+# Disable denoising
+await task.queue_frame(FilterEnableFrame(False))
+
+# Re-enable denoising
+await task.queue_frame(FilterEnableFrame(True))
+```
+
+See the [HecttorFilter reference](/server/utilities/audio/hecttor-filter) for all configuration options.
