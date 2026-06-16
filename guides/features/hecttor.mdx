@@ -6,10 +6,7 @@ description: "Learn how to integrate Hecttor's audio denoising into your Pipecat
 
 ## Overview
 
-Hecttor's SDK provides real-time audio denoising for Pipecat applications using deep learning. It removes background noise and enhances speech clarity with two specialized modes:
-
-- **ASR Mode** — Optimized for speech recognition pipelines. Preserves speech characteristics important for transcription accuracy, leading to fewer errors and better STT results.
-- **Human Mode** — Optimized for human listeners. Includes optional voice boost (multi-band compressor) that increases speech loudness and clarity.
+Hecttor's SDK provides real-time audio denoising for Pipecat applications using deep learning. The `HecttorFilter` uses Hecttor's ASR-optimized enhancer, which removes background noise while preserving the speech characteristics important for transcription accuracy — leading to fewer errors and better STT results. Several enhancement models are available, and you can blend the enhanced output with the original audio.
 
 <CardGroup cols={2}>
   <Card
@@ -64,7 +61,7 @@ pip install hecttor_sdk-<version>-<python>-<platform>.whl
 For example, on macOS ARM64 with Python 3.10:
 
 ```bash
-pip install hecttor_sdk-2.1.0-cp310-cp310-macosx_15_0_arm64.whl
+pip install hecttor_sdk-3.1.0-cp310-cp310-macosx_15_0_arm64.whl
 ```
 
 Then install the pipecat Hecttor extra:
@@ -95,9 +92,9 @@ You're ready to test! Try running the [Hecttor foundational example](https://git
 
 `HecttorFilter` removes background noise from the user's audio in real-time. Add it to any transport via the `audio_in_filter` parameter.
 
-### ASR Mode (for STT pipelines)
+### Basic Usage
 
-Use ASR mode when the audio will be processed by a speech-to-text service. This mode preserves speech features that are important for accurate transcription.
+The filter uses Hecttor's ASR-optimized enhancer, which preserves speech features that are important for accurate transcription.
 
 ```python
 import os
@@ -106,7 +103,7 @@ from pipecat.transports.base_transport import TransportParams
 
 hecttor_filter = HecttorFilter(
     api_key=os.getenv("HECTTOR_API_KEY"),
-    mode="asr",
+    model_name="coda-vi-1.0",
 )
 
 transport = SmallWebRTCTransport(
@@ -119,30 +116,14 @@ transport = SmallWebRTCTransport(
 )
 ```
 
-### Human Mode (with voice boost)
+### Choosing a Model
 
-Use Human mode when the audio will be heard by human listeners (e.g., recordings or call forwarding). Enable voice boost for louder, clearer speech.
+The filter supports several ASR enhancement models: `"crest-1.0"`, `"crest-2.0"`, `"mist-1.0"`, `"coda-1.0"`, and `"coda-vi-1.0"` (voice isolation, the default). Select one with the `model_name` parameter:
 
 ```python
-import os
-from pipecat.audio.filters.hecttor_filter import HecttorFilter
-from pipecat.transports.daily.transport import DailyParams, DailyTransport
-
 hecttor_filter = HecttorFilter(
     api_key=os.getenv("HECTTOR_API_KEY"),
-    mode="human",
-    enable_voice_boost=True,
-)
-
-transport = DailyTransport(
-    room_url,
-    token,
-    "Respond bot",
-    DailyParams(
-        audio_in_enabled=True,
-        audio_in_filter=hecttor_filter,
-        audio_out_enabled=True,
-    ),
+    model_name="crest-2.0",
 )
 ```
 
@@ -153,7 +134,7 @@ Use the `enhancer_weight` parameter to blend between original and enhanced audio
 ```python
 hecttor_filter = HecttorFilter(
     api_key=os.getenv("HECTTOR_API_KEY"),
-    mode="asr",
+    model_name="coda-vi-1.0",
     enhancer_weight=0.8,  # 80% enhanced, 20% original
 )
 ```
