@@ -9,7 +9,7 @@ description: "Audio denoising filter using the Hecttor SDK"
 
 The filter uses Hecttor's ASR-optimized enhancer, which is tuned to preserve the speech characteristics important for transcription accuracy. You can select among several enhancement models and blend the enhanced output with the original audio.
 
-To use Hecttor, you need an API key from the [Hecttor admin panel](https://admin.hecttor.ai).
+To use Hecttor, contact [Hecttor](https://hecttor.ai) for SDK access and an API key.
 
 ## Installation
 
@@ -116,7 +116,7 @@ params = FastAPIWebsocketParams(
 
 ## Notes
 
-- The Hecttor SDK is not publicly available on PyPI. Download the wheel from the [Hecttor admin panel](https://admin.hecttor.ai).
+- The Hecttor SDK is not publicly available on PyPI. Contact [Hecttor](https://hecttor.ai) for SDK access and an API key.
 - The SDK requires outbound HTTPS access for API key authentication on initialization.
 - The filter uses the ASR-optimized enhancer, which is tuned for speech-to-text accuracy.
 - Internal neural network state is maintained across chunks for seamless streaming, and is reset through the filter's `stop()`/`start()` cycle.
